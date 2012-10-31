@@ -11,14 +11,14 @@
 class Drupal_Apachesolr_Facetapi_QueryType_DateRangeQueryType extends FacetapiQueryType implements FacetapiQueryTypeInterface {
 
   /**
-   * Implements FacetapiQueryType::getType().
+   * Implements FacetapiQueryTypeInterface::getType().
    */
   static public function getType() {
     return 'date_range';
   }
 
   /**
-   * Implements FacetapiQueryType::execute().
+   * Implements FacetapiQueryTypeInterface::execute().
    *
    * @see http://searchhub.org/dev/2012/02/23/date-math-now-and-filter-queries/
    */
@@ -27,6 +27,8 @@ class Drupal_Apachesolr_Facetapi_QueryType_DateRangeQueryType extends FacetapiQu
     $field = $this->facet['field'];
 
     if (!empty($active)) {
+
+      // Check the first value since only one is allowed.
       switch (key($active)) {
         case 'past_hour':
           $lower = "NOW/HOUR-1HOUR";
@@ -57,12 +59,9 @@ class Drupal_Apachesolr_Facetapi_QueryType_DateRangeQueryType extends FacetapiQu
   }
 
   /**
-   * Initializes the facet's build array.
+   * Implements FacetapiQueryTypeInterface::build().
    *
-   * Any calls to this method need to be wrapped in a try-catch block.
-   *
-   * @return array
-   *   The initialized render array.
+   * Unlike normal facets, we provide a static list of options.
    */
   public function build() {
     $build = array();
