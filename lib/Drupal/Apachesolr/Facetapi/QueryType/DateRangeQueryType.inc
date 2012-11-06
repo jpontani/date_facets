@@ -64,37 +64,6 @@ class Drupal_Apachesolr_Facetapi_QueryType_DateRangeQueryType extends FacetapiQu
    * Unlike normal facets, we provide a static list of options.
    */
   public function build() {
-    $build = array();
-
-    // Only add items if there are results.
-    if ($this->adapter->getResultCount()) {
-
-      $build['past_hour'] = array(
-        '#count' => NULL,
-        '#markup' => t('Past hour'),
-      );
-
-      $build['past_24_hours'] = array(
-        '#count' => NULL,
-        '#markup' => t('Past 24 hours'),
-      );
-
-      $build['past_week'] = array(
-        '#count' => NULL,
-        '#markup' => t('Past week'),
-      );
-
-      $build['past_month'] = array(
-        '#count' => NULL,
-        '#markup' => t('Past month'),
-      );
-
-      $build['past_year'] = array(
-        '#count' => NULL,
-        '#markup' => t('Past year'),
-      );
-    }
-
-    return $build;
+    return date_facets_get_ranges();
   }
 }
