@@ -4,4 +4,4 @@ dependencies[] = facetapi
 package = Search Toolkit
 core = 7.x
 files[] = lib/Drupal/Apachesolr/Facetapi/QueryType/DateRangeQueryType.inc
-files[] = lib/Drupal/Apachesolr/Facetapi/Widget/DateRangeWidget.inc
+files[] = lib/Drupal/Facetapi/Widget/DateRangeWidget.inc

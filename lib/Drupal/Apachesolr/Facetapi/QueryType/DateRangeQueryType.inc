@@ -66,30 +66,34 @@ class Drupal_Apachesolr_Facetapi_QueryType_DateRangeQueryType extends FacetapiQu
   public function build() {
     $build = array();
 
-    $build['past_hour'] = array(
-      '#count' => NULL,
-      '#markup' => t('Past hour'),
-    );
+    // Only add items if there are results.
+    if ($this->adapter->getResultCount()) {
 
-    $build['past_24_hours'] = array(
-      '#count' => NULL,
-      '#markup' => t('Past 24 hours'),
-    );
+      $build['past_hour'] = array(
+        '#count' => NULL,
+        '#markup' => t('Past hour'),
+      );
 
-    $build['past_week'] = array(
-      '#count' => NULL,
-      '#markup' => t('Past week'),
-    );
+      $build['past_24_hours'] = array(
+        '#count' => NULL,
+        '#markup' => t('Past 24 hours'),
+      );
 
-    $build['past_month'] = array(
-      '#count' => NULL,
-      '#markup' => t('Past month'),
-    );
+      $build['past_week'] = array(
+        '#count' => NULL,
+        '#markup' => t('Past week'),
+      );
 
-    $build['past_year'] = array(
-      '#count' => NULL,
-      '#markup' => t('Past year'),
-    );
+      $build['past_month'] = array(
+        '#count' => NULL,
+        '#markup' => t('Past month'),
+      );
+
+      $build['past_year'] = array(
+        '#count' => NULL,
+        '#markup' => t('Past year'),
+      );
+    }
 
     return $build;
   }
