@@ -8,15 +8,28 @@
 /**
  * Implements hook_facetapi_facet_info_alter().
  *
- * Associates all date fields with the "date_range" query type.
+ * @see date_facets_add_widget()
  */
 function date_facets_facetapi_facet_info_alter(array &$facet_info, array $searcher_info) {
-  if ('apachesolr' == $searcher_info['adapter']) {
-    foreach ($facet_info as $name => $info) {
-      $query_types = array_flip($info['query types']);
-      if (isset($query_types['date'])) {
-        $facet_info[$name]['query types'][] = 'date_range';
-      }
+  switch ($searcher_info['adapter']) {
+    case 'apachesolr':
+    case 'search':
+      date_facets_associate_widget($facet_info);
+      break;
+  }
+}
+
+/**
+ * Associates all date fields with the "date_range" query type.
+ *
+ * @param array &$facet_info
+ *   The facet definitions passed to hook_facetapi_facet_info_alter().
+ */
+function date_facets_associate_widget(array &$facet_info) {
+  foreach ($facet_info as $name => $info) {
+    $query_types = array_flip($info['query types']);
+    if (isset($query_types['date'])) {
+      $facet_info[$name]['query types'][] = 'date_range';
     }
   }
 }

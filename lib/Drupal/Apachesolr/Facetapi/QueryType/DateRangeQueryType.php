@@ -2,11 +2,11 @@
 
 /**
  * @file
- * Numeric range query type plugin for the Apache Solr adapter.
+ * Contains Drupal_Apachesolr_Facetapi_QueryType_DateRangeQueryType.
  */
 
 /**
- * Plugin for "numeric_range" query types.
+ * Date range query type plugin for the Apache Solr Search Integration adapter.
  */
 class Drupal_Apachesolr_Facetapi_QueryType_DateRangeQueryType extends FacetapiQueryType implements FacetapiQueryTypeInterface {
 
