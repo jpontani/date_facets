@@ -72,3 +72,85 @@ function date_facets_get_ranges() {
 
   return $build;
 }
+
+/**
+ * Implements hook_theme().
+ */
+function date_facets_theme() {
+  return array(
+    'date_facets_tabledrag_form' => array(
+      'render element' => 'form',
+    ),
+  );
+}
+
+/**
+ * Add a tabledrag table for date ranges on the given date facet.
+ */
+function theme_date_facets_tabledrag_form($variables) {
+  $form = $variables['form'];
+  $header = array(
+    array('data' => t('Name !required', array('!required' => '<span class="form-required" title="' . t('This field is required.') . '">*</span>'))),
+    array('data' => t('Date Range !required', array('!required' => '<span class="form-required" title="' . t('This field is required.') . '">*</span>')), 'colspan' => 2),
+    array('data' => t('Weight')),
+    array('data' => t('Delete'))
+  );
+  drupal_add_tabledrag('facetapi-date-range-query-date-ranges', 'order', 'self', 'date-range-weight');
+  $rows = array();
+  foreach (element_children($form['widget']['widget_settings']['ranges']) as $range_key) {
+    $row = array();
+    unset($form['widget']['widget_settings']['ranges'][$range_key]['label']['#title']);
+    $row[] = drupal_render($form['widget']['widget_settings']['ranges'][$range_key]['label'])
+      . drupal_render($form['widget']['widget_settings']['ranges'][$range_key]['machine_name']);
+    foreach (array('date_range_start', 'date_range_end', 'weight', 'delete') as $element) {
+      unset($form['widget']['widget_settings']['ranges'][$range_key][$element]['#title']);
+      $row[] = drupal_render($form['widget']['widget_settings']['ranges'][$range_key][$element]);
+    }
+    $rows[] = array(
+      'data' => $row,
+      'class' => array('draggable'),
+    );
+  }
+  $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'facetapi-date-range-query-date-ranges')));
+  $form['widget']['widget_settings']['date_ranges']['ranges'] = array(
+    '#type' => 'markup',
+    '#markup' => $output,
+    '#weight' => 0,
+  );
+  return drupal_render_children($form);
+}
+
+function date_facets_tabledrag_form_validate($form, &$form_state) {
+  $error = FALSE;
+  $temp_error = FALSE;
+  foreach ($form_state['values']['ranges'] as $range_key => $range_data) {
+    if ($range_data['delete']) {
+      unset($form_state['values']['ranges'][$range_key]);
+      continue;
+    }
+    foreach (array('label', 'machine_name', 'date_range_start', 'date_range_end') as $element) {
+      if (empty($range_data[$element])) {
+        form_set_error("widget][widget_settings][ranges][$range_key][$element");
+        $error = TRUE;
+        if ($range_key == 'temp') {
+          $temp_error = TRUE;
+        }
+      }
+    }
+  }
+  if (!$temp_error) {
+    $machine_name = $form_state['values']['ranges']['temp']['machine_name'];
+    $form_state['values']['ranges'][$machine_name] = $form_state['values']['ranges']['temp'];
+    unset($form_state['values']['ranges']['temp']);
+  }
+  return !$error;
+}
+
+function date_facets_date_range_exists($label) {
+  return FALSE;
+}
+
+function date_facets_tabledrag_form_new_range($form, &$form_state) {
+  $form_state['add_new_range'] = TRUE;
+  return drupal_rebuild_form($form['#form_id'], $form_state, $form);
+}

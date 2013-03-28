@@ -62,6 +62,129 @@ class Drupal_Apachesolr_Facetapi_Widget_DateRangeWidget extends FacetapiWidgetLi
     parent::settingsForm($form, $form_state);
     unset($form['widget']['widget_settings']['links'][$this->id]['soft_limit']);
     unset($form['widget']['widget_settings']['links'][$this->id]['show_expanded']);
+    if (isset($this->settings->settings['ranges'])) {
+      $form['widget']['widget_settings']['ranges'] = array(
+        '#type' => 'container',
+        '#tree' => TRUE,
+      );
+      foreach($this->settings->settings['ranges'] as $range_label => $range_data) {
+        $form['widget']['widget_settings']['ranges'][$range_label]['label'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Label'),
+          '#default_value' => $range_data['label'],
+          '#size' => 40,
+          '#tree' => TRUE,
+        );
+        $form['widget']['widget_settings']['ranges'][$range_label]['machine_name'] = array(
+          '#type' => 'machine_name',
+          '#default_value' => $range_label,
+          '#maxlength' => 20,
+          '#machine_name' => array(
+            'exists' => 'date_facets_date_range_exists',
+            'source' => array('widget', 'widget_settings', 'ranges', $range_label, 'label'),
+          ),
+          '#tree' => TRUE,
+        );
+        $form['widget']['widget_settings']['ranges'][$range_label]['date_range_start'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Date Range'),
+          '#default_value' => $range_data['date_range_start'],
+          '#size' => 20,
+          '#tree' => TRUE,
+        );
+        $form['widget']['widget_settings']['ranges'][$range_label]['date_range_end'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Date Range'),
+          '#default_value' => $range_data['date_range_end'],
+          '#size' => 20,
+          '#tree' => TRUE,
+        );
+        $form['widget']['widget_settings']['ranges'][$range_label]['weight'] = array(
+          '#type' => 'weight',
+          '#title' => t('Weight'),
+          '#default_value' => $range_data['weight'],
+          '#delta' => 10,
+          '#attributes' => array('class' => array('date-range-weight')),
+          '#tree' => TRUE,
+        );
+        $form['widget']['widget_settings']['ranges'][$range_label]['delete'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Delete'),
+          '#tree' => TRUE,
+        );
+      }
+      $form['widget']['widget_settings']['date_ranges'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Configured Date Ranges'),
+        '#tree' => TRUE,
+      );
+      if (isset($form_state['add_new_range']) && $form_state['add_new_range']) {
+        $form_state['add_new_range'] = FALSE;
+        $form['widget']['widget_settings']['ranges']['temp']['label'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Label'),
+          '#size' => 40,
+          '#tree' => TRUE,
+        );
+        $form['widget']['widget_settings']['ranges']['temp']['machine_name'] = array(
+          '#type' => 'machine_name',
+          '#maxlength' => 20,
+          '#machine_name' => array(
+            'exists' => 'date_facets_date_range_exists',
+            'source' => array('widget', 'widget_settings', 'ranges', 'temp', 'label'),
+          ),
+          '#tree' => TRUE,
+        );
+        $form['widget']['widget_settings']['ranges']['temp']['date_range_start'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Date Range'),
+          '#size' => 20,
+          '#tree' => TRUE,
+        );
+        $form['widget']['widget_settings']['ranges']['temp']['date_range_end'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Date Range'),
+          '#size' => 20,
+          '#tree' => TRUE,
+        );
+        $form['widget']['widget_settings']['ranges']['temp']['weight'] = array(
+          '#type' => 'weight',
+          '#title' => t('Weight'),
+          '#delta' => 10,
+          '#attributes' => array('class' => array('date-range-weight')),
+          '#tree' => TRUE,
+        );
+        $form['widget']['widget_settings']['ranges']['temp']['delete'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Delete'),
+          '#tree' => TRUE,
+          '#states' => array(
+            'checked' => array(
+              ':input[name*="temp][label]"]' => array('value' => ''),
+            ),
+          ),
+        );
+      }
+      else {
+        $form['widget']['widget_settings']['date_ranges']['add_range'] = array(
+          '#type' => 'button',
+          '#executes_submit_callback' => FALSE,
+          '#value' => t('Add a new date range'),
+          '#limit_validation_errors' => array(),
+          '#ajax' => array(
+            'callback' => 'date_facets_tabledrag_form_new_range',
+            'wrapper' => 'date_facets_facet_config_form',
+            'method' => 'replace',
+            'effect' => 'fade',
+          ),
+          '#weight' => 10,
+        );
+      }
+      $form['#validate'] = array('date_facets_tabledrag_form_validate');
+      $form['#theme'] = 'date_facets_tabledrag_form';
+      $form['#prefix'] = '<div id="date_facets_facet_config_form">';
+      $form['#suffix'] = '</div>';
+    }
   }
 
   /**
