@@ -67,6 +67,7 @@ class Drupal_Apachesolr_Facetapi_Widget_DateRangeWidget extends FacetapiWidgetLi
       '#tree' => TRUE,
     );
     if (isset($this->settings->settings['ranges'])) {
+      uasort($this->settings->settings['ranges'], 'drupal_sort_weight');
       foreach($this->settings->settings['ranges'] as $range_data) {
         $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['label'] = array(
           '#type' => 'textfield',
@@ -86,6 +87,7 @@ class Drupal_Apachesolr_Facetapi_Widget_DateRangeWidget extends FacetapiWidgetLi
           '#tree' => TRUE,
         );
         $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['date_range_start_op'] = array(
+          '#prefix' => t('FROM'),
           '#type' => 'select',
           '#title' => t('Date Range'),
           '#default_value' => (isset($range_data['date_range_start_op']) ? $range_data['date_range_start_op'] : NULL),
@@ -113,6 +115,7 @@ class Drupal_Apachesolr_Facetapi_Widget_DateRangeWidget extends FacetapiWidgetLi
           '#title' => t('Date Range'),
           '#default_value' => (isset($range_data['date_range_start_unit']) ? $range_data['date_range_start_unit'] : NULL),
           '#options' => array(
+            'HOUR' => t('hour'),
             'DAY' => t('day'),
             'MONTH' => t('month'),
             'YEAR' => t('year'),
@@ -125,6 +128,7 @@ class Drupal_Apachesolr_Facetapi_Widget_DateRangeWidget extends FacetapiWidgetLi
           '#tree' => TRUE,
         );
         $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['date_range_end_op'] = array(
+          '#prefix' => t('TO'),
           '#type' => 'select',
           '#title' => t('Date Range'),
           '#default_value' => (isset($range_data['date_range_end_op']) ? $range_data['date_range_end_op'] : NULL),
@@ -152,6 +156,7 @@ class Drupal_Apachesolr_Facetapi_Widget_DateRangeWidget extends FacetapiWidgetLi
           '#title' => t('Date Range'),
           '#default_value' => (isset($range_data['date_range_end_unit']) ? $range_data['date_range_end_unit'] : NULL),
           '#options' => array(
+            'HOUR' => t('hour'),
             'DAY' => t('day'),
             'MONTH' => t('month'),
             'YEAR' => t('year'),
@@ -182,6 +187,7 @@ class Drupal_Apachesolr_Facetapi_Widget_DateRangeWidget extends FacetapiWidgetLi
       '#type' => 'fieldset',
       '#title' => t('Configured Date Ranges'),
       '#tree' => TRUE,
+      '#attributes' => array('class' => array('clearfix')),
     );
     if (isset($form_state['add_new_range']) && $form_state['add_new_range']) {
       $form_state['add_new_range'] = FALSE;
@@ -225,13 +231,14 @@ class Drupal_Apachesolr_Facetapi_Widget_DateRangeWidget extends FacetapiWidgetLi
         '#type' => 'select',
         '#title' => t('Date Range'),
         '#options' => array(
+          'HOUR' => t('hour'),
           'DAY' => t('day'),
           'MONTH' => t('month'),
           'YEAR' => t('year'),
         ),
         '#states' => array(
           'invisible' => array(
-            ':input[name*="temp][date_range_end_op]"]' => array('value' => 'NOW'),
+            ':input[name*="temp][date_range_start_op]"]' => array('value' => 'NOW'),
           ),
         ),
         '#tree' => TRUE,
@@ -261,6 +268,7 @@ class Drupal_Apachesolr_Facetapi_Widget_DateRangeWidget extends FacetapiWidgetLi
         '#type' => 'select',
         '#title' => t('Date Range'),
         '#options' => array(
+          'HOUR' => t('hour'),
           'DAY' => t('day'),
           'MONTH' => t('month'),
           'YEAR' => t('year'),

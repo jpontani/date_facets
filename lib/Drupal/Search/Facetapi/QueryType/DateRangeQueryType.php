@@ -28,38 +28,72 @@ class Drupal_Search_Facetapi_QueryType_DateRangeQueryType extends FacetapiQueryT
       $facet_query = $this->adapter->getFacetQueryExtender();
       $query_info = $this->adapter->getQueryInfo($this->facet);
       $tables_joined = array();
+      
+      $settings = $this->adapter->getFacetSettings($this->facet, facetapi_realm_load('block'));
+      $ranges = (isset($settings->settings['ranges']) ? $settings->settings['ranges'] : array());
 
-      // Check the first value since only one is allowed.
-      // @todo Make the start time less dynamic to make use of the query cache.
-      // Leverage the same technique as Solr where the times are reounded.
-      switch (key($active)) {
-        case 'past_hour':
-          $start = REQUEST_TIME - (60 * 60);
-          break;
+      if (empty($ranges)) {
+        // Check the first value since only one is allowed.
+        // @todo Make the start time less dynamic to make use of the query cache.
+        // Leverage the same technique as Solr where the times are reounded.
+        switch (key($active)) {
+          case 'past_hour':
+            $start = REQUEST_TIME - (60 * 60);
+            break;
 
-        case 'past_24_hours':
-          $start = REQUEST_TIME - (60 * 60 * 24);
-          break;
+          case 'past_24_hours':
+            $start = REQUEST_TIME - (60 * 60 * 24);
+            break;
 
-        case 'past_week':
-          $start = REQUEST_TIME - (60 * 60 * 24 * 7);
-          break;
+          case 'past_week':
+            $start = REQUEST_TIME - (60 * 60 * 24 * 7);
+            break;
 
-        case 'past_month':
-          $start = REQUEST_TIME - (60 * 60 * 24 * 30);
-          break;
+          case 'past_month':
+            $start = REQUEST_TIME - (60 * 60 * 24 * 30);
+            break;
 
-        case 'past_year':
-          $start = REQUEST_TIME - (60 * 60 * 24 * 365);
-          break;
+          case 'past_year':
+            $start = REQUEST_TIME - (60 * 60 * 24 * 365);
+            break;
 
-        default:
-          return;
+          default:
+            return;
+        }
+        // @todo Make the end time less dynamic to make use of the query cache.
+        // Leverage the same technique as Solr where the times are reounded.
+        $end = REQUEST_TIME;
       }
-
-      // @todo Make the end time less dynamic to make use of the query cache.
-      // Leverage the same technique as Solr where the times are reounded.
-      $end = REQUEST_TIME;
+      else {
+        $range = $ranges[key($active)];
+        foreach (array('start', 'end') as $item) {
+          $$item = REQUEST_TIME;
+          $unit = $range['date_range_' . $item . '_unit'];
+          $amount = (int) $range['date_range_' . $item . '_amount'];
+          switch ($unit) {
+            case 'HOUR':
+              $unit = (int) DATE_RANGE_UNIT_HOUR;
+              break;
+            case 'DAY':
+              $unit = (int) DATE_RANGE_UNIT_DAY;
+              break;
+            case 'MONTH':
+              $unit = (int) DATE_RANGE_UNIT_MONTH;
+              break;
+            case 'YEAR':
+              $unit = (int) DATE_RANGE_UNIT_YEAR;
+              break;
+          }
+          switch ($range['date_range_' . $item . '_op']) {
+            case '-':
+              $$item -= ($amount * $unit);
+              break;
+            case '+':
+              $$item += ($amount * $unit);
+              break;
+          }
+        }
+      }
 
       // Iterate over the facet's fields and adds SQL clauses.
       foreach ($query_info['fields'] as $field_info) {
@@ -92,6 +126,8 @@ class Drupal_Search_Facetapi_QueryType_DateRangeQueryType extends FacetapiQueryT
    * Unlike normal facets, we provide a static list of options.
    */
   public function build() {
-    return date_facets_get_ranges();
+    $settings = $this->adapter->getFacetSettings($this->facet, facetapi_realm_load('block'));
+    $ranges = (isset($settings->settings['ranges']) ? $settings->settings['ranges'] : array());
+    return date_facets_get_ranges($ranges);
   }
 }

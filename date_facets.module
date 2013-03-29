@@ -1,9 +1,13 @@
 <?php
-
 /**
  * @file
  * Provides date range facets that are similar to implementations in major search engines.
  */
+
+define('DATE_RANGE_UNIT_HOUR', 60 * 60);
+define('DATE_RANGE_UNIT_DAY', 60 * 60 * 24);
+define('DATE_RANGE_UNIT_MONTH', 60 * 60 * 24 * 30);
+define('DATE_RANGE_UNIT_YEAR', 60 * 60 * 24 * 365);
 
 /**
  * Implements hook_facetapi_facet_info_alter().
@@ -42,33 +46,45 @@ function date_facets_associate_widget(array &$facet_info) {
  *
  * @todo Implement an alter hook?
  */
-function date_facets_get_ranges() {
+function date_facets_get_ranges($ranges = array()) {
   $build = array();
 
-  $build['past_hour'] = array(
-    '#count' => NULL,
-    '#markup' => t('Past hour'),
-  );
+  if (empty($ranges)) {
+    $build['past_hour'] = array(
+      '#count' => NULL,
+      '#markup' => t('Past hour'),
+    );
 
-  $build['past_24_hours'] = array(
-    '#count' => NULL,
-    '#markup' => t('Past 24 hours'),
-  );
+    $build['past_24_hours'] = array(
+      '#count' => NULL,
+      '#markup' => t('Past 24 hours'),
+    );
 
-  $build['past_week'] = array(
-    '#count' => NULL,
-    '#markup' => t('Past week'),
-  );
+    $build['past_week'] = array(
+      '#count' => NULL,
+      '#markup' => t('Past week'),
+    );
 
-  $build['past_month'] = array(
-    '#count' => NULL,
-    '#markup' => t('Past month'),
-  );
+    $build['past_month'] = array(
+      '#count' => NULL,
+      '#markup' => t('Past month'),
+    );
 
-  $build['past_year'] = array(
-    '#count' => NULL,
-    '#markup' => t('Past year'),
-  );
+    $build['past_year'] = array(
+      '#count' => NULL,
+      '#markup' => t('Past year'),
+    );
+  }
+  else {
+    uasort($ranges, 'drupal_sort_weight');
+    foreach ($ranges as $range_data) {
+      $build[$range_data['machine_name']] = array(
+        '#count' => NULL,
+        '#markup' => $range_data['label'],
+        '#weight' => $range_data['weight'],
+      );
+    }
+  }
 
   return $build;
 }
@@ -128,6 +144,9 @@ function theme_date_facets_tabledrag_form($variables) {
   return drupal_render_children($form);
 }
 
+/**
+ * Custom date range form validation.
+ */
 function date_facets_tabledrag_form_validate($form, &$form_state) {
   $error = FALSE;
   $temp_error = FALSE;
@@ -149,24 +168,27 @@ function date_facets_tabledrag_form_validate($form, &$form_state) {
       if (empty($range_data[$element])) {
         form_set_error("ranges][$range_key][$element", t('!item is required.', array('!item' => '<em>' . $element . '</em>')));
         $error = TRUE;
-        if ($range_key == 'temp') {
-          $temp_error = TRUE;
-        }
       }
     }
-  }
-  if (isset($form_state['values']['ranges']['temp']) && !$temp_error) {
-    $machine_name = $form_state['values']['ranges']['temp']['machine_name'];
-    $form_state['values']['ranges'][$machine_name] = $form_state['values']['ranges']['temp'];
-    unset($form_state['values']['ranges']['temp']);
+    if (!$error) {
+      unset($form_state['values']['ranges'][$range_key]);
+      $form_state['values']['ranges'][$range_data['machine_name']] = $range_data;
+    }
   }
   return !$error;
 }
 
+/**
+ * Date range machine name existence check.
+ * @TODO: Make this actually work.
+ */
 function date_facets_date_range_exists($label) {
   return FALSE;
 }
 
+/**
+ * Custom date range AJAX handler. Rebuild the entire form for now, unfortunately.
+ */
 function date_facets_tabledrag_form_new_range($form, &$form_state) {
   $form_state['add_new_range'] = TRUE;
   return drupal_rebuild_form($form['#form_id'], $form_state, $form);
