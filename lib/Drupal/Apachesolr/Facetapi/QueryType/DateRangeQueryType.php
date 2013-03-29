@@ -57,6 +57,15 @@ class Drupal_Apachesolr_Facetapi_QueryType_DateRangeQueryType extends FacetapiQu
       $query->addParam('fq', $this->facet['field'] . ":[$lower TO NOW/DAY+1DAY]");
     }
   }
+  
+  protected function generateRange($lower = NULL, $upper = NULL) {
+    if (empty($lower)) {
+      $lower = "NOW/DAY";
+    }
+    if (empty($upper)) {
+      $upper = "NOW/DAY+1DAY";
+    }
+  }
 
   /**
    * Implements FacetapiQueryTypeInterface::build().

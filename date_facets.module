@@ -102,7 +102,15 @@ function theme_date_facets_tabledrag_form($variables) {
     unset($form['widget']['widget_settings']['ranges'][$range_key]['label']['#title']);
     $row[] = drupal_render($form['widget']['widget_settings']['ranges'][$range_key]['label'])
       . drupal_render($form['widget']['widget_settings']['ranges'][$range_key]['machine_name']);
-    foreach (array('date_range_start', 'date_range_end', 'weight', 'delete') as $element) {
+    foreach (array('date_range_start', 'date_range_end') as $element) {
+      $temp_row = '';
+      foreach (array('op', 'amount', 'unit') as $item) {
+        unset($form['widget']['widget_settings']['ranges'][$range_key][$element . '_' . $item]['#title']);
+        $temp_row .= drupal_render($form['widget']['widget_settings']['ranges'][$range_key][$element . '_' . $item]);
+      }
+      $row[] = $temp_row;
+    }
+    foreach (array('weight', 'delete') as $element) {
       unset($form['widget']['widget_settings']['ranges'][$range_key][$element]['#title']);
       $row[] = drupal_render($form['widget']['widget_settings']['ranges'][$range_key][$element]);
     }
@@ -128,9 +136,18 @@ function date_facets_tabledrag_form_validate($form, &$form_state) {
       unset($form_state['values']['ranges'][$range_key]);
       continue;
     }
-    foreach (array('label', 'machine_name', 'date_range_start', 'date_range_end') as $element) {
+    foreach (array('date_range_start', 'date_range_end') as $item) {
+      if ($range_data[$item . '_op'] != 'NOW') {
+        if (empty($range_data[$item . '_amount'])) {
+          $key = $item . '_amount';
+          form_set_error("ranges][$range_key][$key", t('You must enter an amount.'));
+          $error = TRUE;
+        }
+      }
+    }
+    foreach (array('label', 'machine_name') as $element) {
       if (empty($range_data[$element])) {
-        form_set_error("widget][widget_settings][ranges][$range_key][$element");
+        form_set_error("ranges][$range_key][$element", t('!item is required.', array('!item' => '<em>' . $element . '</em>')));
         $error = TRUE;
         if ($range_key == 'temp') {
           $temp_error = TRUE;
@@ -138,7 +155,7 @@ function date_facets_tabledrag_form_validate($form, &$form_state) {
       }
     }
   }
-  if (!$temp_error) {
+  if (isset($form_state['values']['ranges']['temp']) && !$temp_error) {
     $machine_name = $form_state['values']['ranges']['temp']['machine_name'];
     $form_state['values']['ranges'][$machine_name] = $form_state['values']['ranges']['temp'];
     unset($form_state['values']['ranges']['temp']);
