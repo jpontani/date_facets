@@ -193,3 +193,66 @@ function date_facets_tabledrag_form_new_range($form, &$form_state) {
   $form_state['add_new_range'] = TRUE;
   return drupal_rebuild_form($form['#form_id'], $form_state, $form);
 }
+
+/**
+ * Provides the default date ranges.
+ */
+function date_facets_default_ranges() {
+  return array(
+    'past_hour' => array(
+      'machine_name' => 'past_hour',
+      'label' => t('Past hour'),
+      'date_range_start_op' => '-',
+      'date_range_start_amount' => '1',
+      'date_range_start_unit' => 'HOUR',
+      'date_range_end_op' => 'NOW',
+      'date_range_end_amount' => '',
+      'date_range_end_unit' => '',
+      'weight' => 0,
+    ),
+    'past_24_hours' => array(
+      'machine_name' => 'past_24_hours',
+      'label' => t('Past 24 hours'),
+      'date_range_start_op' => '-',
+      'date_range_start_amount' => '24',
+      'date_range_start_unit' => 'HOUR',
+      'date_range_end_op' => 'NOW',
+      'date_range_end_amount' => '',
+      'date_range_end_unit' => '',
+      'weight' => 1,
+    ),
+    'past_week' => array(
+      'machine_name' => 'past_week',
+      'label' => t('Past week'),
+      'date_range_start_op' => '-',
+      'date_range_start_amount' => '7',
+      'date_range_start_unit' => 'DAY',
+      'date_range_end_op' => 'NOW',
+      'date_range_end_amount' => '',
+      'date_range_end_unit' => '',
+      'weight' => 2,
+    ),
+    'past_month' => array(
+      'machine_name' => 'past_month',
+      'label' => t('Past month'),
+      'date_range_start_op' => '-',
+      'date_range_start_amount' => '1',
+      'date_range_start_unit' => 'MONTH',
+      'date_range_end_op' => 'NOW',
+      'date_range_end_amount' => '',
+      'date_range_end_unit' => '',
+      'weight' => 3,
+    ),
+    'past_year' => array(
+      'machine_name' => 'past_year',
+      'label' => t('Past year'),
+      'date_range_start_op' => '-',
+      'date_range_start_amount' => '1',
+      'date_range_start_unit' => 'YEAR',
+      'date_range_end_op' => 'NOW',
+      'date_range_end_amount' => '',
+      'date_range_end_unit' => '',
+      'weight' => 4,
+    ),
+  );
+}
