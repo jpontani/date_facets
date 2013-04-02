@@ -64,14 +64,14 @@ class Drupal_Apachesolr_Facetapi_QueryType_DateRangeQueryType extends FacetapiQu
     }
     else {
       $s = (((int) abs($range['date_range_start_amount']) > 1) ? 'S' : '');
-      $lower = "NOW/" . $this->unitDivisor($range['date_range_start_unit']) . $range['date_range_start_amount'] . $range['date_range_start_unit'] . $s;
+      $lower = "NOW/" . $this->unitDivisor($range['date_range_start_unit']) . $range['date_range_start_op'] . $range['date_range_start_amount'] . $range['date_range_start_unit'] . $s;
     }
     if ($range['date_range_end_op'] == 'NOW') {
       $upper = "NOW/DAY+1DAY";
     }
     else {
       $s = (((int) abs($range['date_range_end_amount']) > 1) ? 'S' : '');
-      $upper = "NOW/" . $this->unitDivisor($range['date_range_end_unit']) . $range['date_range_end_amount'] . $range['date_range_end_unit'] . $s;
+      $upper = "NOW/" . $this->unitDivisor($range['date_range_end_unit']) . $range['date_range_end_op'] . $range['date_range_end_amount'] . $range['date_range_end_unit'] . $s;
     }
     return array($lower, $upper);
   }
