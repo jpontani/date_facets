@@ -16,6 +16,43 @@ class Drupal_Search_Facetapi_QueryType_DateRangeQueryType extends FacetapiQueryT
   static public function getType() {
     return 'date_range';
   }
+  
+  protected function generateRange($range = array()) {
+    if (empty($range)) {
+      $start = REQUEST_TIME;
+      $end = REQUEST_TIME + DATE_RANGE_UNIT_DAY;
+    }
+    else {
+      foreach (array('start', 'end') as $item) {
+        $$item = REQUEST_TIME;
+        $unit = $range['date_range_' . $item . '_unit'];
+        $amount = (int) $range['date_range_' . $item . '_amount'];
+        switch ($unit) {
+          case 'HOUR':
+            $unit = (int) DATE_RANGE_UNIT_HOUR;
+            break;
+          case 'DAY':
+            $unit = (int) DATE_RANGE_UNIT_DAY;
+            break;
+          case 'MONTH':
+            $unit = (int) DATE_RANGE_UNIT_MONTH;
+            break;
+          case 'YEAR':
+            $unit = (int) DATE_RANGE_UNIT_YEAR;
+            break;
+        }
+        switch ($range['date_range_' . $item . '_op']) {
+          case '-':
+            $$item -= ($amount * $unit);
+            break;
+          case '+':
+            $$item += ($amount * $unit);
+            break;
+        }
+      }
+    }
+    return array($start, $end);
+  }
 
   /**
    * Implements FacetapiQueryTypeInterface::execute().
@@ -30,70 +67,9 @@ class Drupal_Search_Facetapi_QueryType_DateRangeQueryType extends FacetapiQueryT
       $tables_joined = array();
       
       $settings = $this->adapter->getFacetSettings($this->facet, facetapi_realm_load('block'));
-      $ranges = (isset($settings->settings['ranges']) ? $settings->settings['ranges'] : array());
-
-      if (empty($ranges)) {
-        // Check the first value since only one is allowed.
-        // @todo Make the start time less dynamic to make use of the query cache.
-        // Leverage the same technique as Solr where the times are reounded.
-        switch (key($active)) {
-          case 'past_hour':
-            $start = REQUEST_TIME - (60 * 60);
-            break;
-
-          case 'past_24_hours':
-            $start = REQUEST_TIME - (60 * 60 * 24);
-            break;
-
-          case 'past_week':
-            $start = REQUEST_TIME - (60 * 60 * 24 * 7);
-            break;
-
-          case 'past_month':
-            $start = REQUEST_TIME - (60 * 60 * 24 * 30);
-            break;
-
-          case 'past_year':
-            $start = REQUEST_TIME - (60 * 60 * 24 * 365);
-            break;
-
-          default:
-            return;
-        }
-        // @todo Make the end time less dynamic to make use of the query cache.
-        // Leverage the same technique as Solr where the times are reounded.
-        $end = REQUEST_TIME;
-      }
-      else {
-        $range = $ranges[key($active)];
-        foreach (array('start', 'end') as $item) {
-          $$item = REQUEST_TIME;
-          $unit = $range['date_range_' . $item . '_unit'];
-          $amount = (int) $range['date_range_' . $item . '_amount'];
-          switch ($unit) {
-            case 'HOUR':
-              $unit = (int) DATE_RANGE_UNIT_HOUR;
-              break;
-            case 'DAY':
-              $unit = (int) DATE_RANGE_UNIT_DAY;
-              break;
-            case 'MONTH':
-              $unit = (int) DATE_RANGE_UNIT_MONTH;
-              break;
-            case 'YEAR':
-              $unit = (int) DATE_RANGE_UNIT_YEAR;
-              break;
-          }
-          switch ($range['date_range_' . $item . '_op']) {
-            case '-':
-              $$item -= ($amount * $unit);
-              break;
-            case '+':
-              $$item += ($amount * $unit);
-              break;
-          }
-        }
-      }
+      $ranges = (isset($settings->settings['ranges']) ? $settings->settings['ranges'] : date_facets_default_ranges());
+      $range = $ranges[key($active)];
+      list($start, $end) = $this->generateRange($range);
 
       // Iterate over the facet's fields and adds SQL clauses.
       foreach ($query_info['fields'] as $field_info) {
@@ -122,12 +98,40 @@ class Drupal_Search_Facetapi_QueryType_DateRangeQueryType extends FacetapiQueryT
 
   /**
    * Implements FacetapiQueryTypeInterface::build().
-   *
-   * Unlike normal facets, we provide a static list of options.
    */
   public function build() {
-    $settings = $this->adapter->getFacetSettings($this->facet, facetapi_realm_load('block'));
-    $ranges = (isset($settings->settings['ranges']) ? $settings->settings['ranges'] : array());
-    return date_facets_get_ranges($ranges);
+    $realm = facetapi_realm_load('block');
+    $settings = $this->adapter->getFacetSettings($this->facet, $realm);
+    $ranges = (isset($settings->settings['ranges']) ? $settings->settings['ranges'] : date_facets_default_ranges());
+    $build = date_facets_get_ranges($ranges);
+    if ($this->adapter->searchExecuted()) {
+      $facet_global_settings = $this->adapter->getFacet($this->facet)->getSettings();
+      // Iterate over each date range to get a count of results for that item.
+      foreach ($ranges as $range) {
+        list($start, $end) = $this->generateRange($range);
+        $facet_query = clone $this->adapter->getFacetQueryExtender();
+        $query_info = $this->adapter->getQueryInfo($this->facet);
+        $facet_query->addFacetField($query_info);
+        foreach ($query_info['fields'] as $field_info) {
+          $facet_query->addFacetJoin($query_info, $field_info['table_alias']);
+          $field = $field_info['table_alias'] . '.' . $this->facet['field'];
+          $facet_query->condition($field, $start, '>=');
+          $facet_query->condition($field, $end, '<');
+        }
+        // Executes query, iterates over results.
+        $result = $facet_query->execute()->fetchAll();
+        // If the result is 0, and the mincount is set to more than 0, remove
+        // the facet option.
+        if (empty($result)
+          && $facet_global_settings->settings['facet_mincount'] > 0) {
+          unset($build[$range['machine_name']]);
+        }
+        // Add the facet option counts to the build array.
+        foreach ($result as $record) {
+          $build[$range['machine_name']]['#count'] = $record->count;
+        }
+      }
+    }
+    return $build;
   }
 }
