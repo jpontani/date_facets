@@ -102,7 +102,7 @@ class Drupal_Search_Facetapi_QueryType_DateRangeQueryType extends FacetapiQueryT
   public function build() {
     $realm = facetapi_realm_load('block');
     $settings = $this->adapter->getFacetSettings($this->facet, $realm);
-    $ranges = (isset($settings->settings['ranges']) ? $settings->settings['ranges'] : date_facets_default_ranges());
+    $ranges = (isset($settings->settings['ranges']) && !empty($settings->settings['ranges']) ? $settings->settings['ranges'] : date_facets_default_ranges());
     $build = date_facets_get_ranges($ranges);
     if ($this->adapter->searchExecuted()) {
       $facet_global_settings = $this->adapter->getFacet($this->facet)->getSettings();

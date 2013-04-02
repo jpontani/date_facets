@@ -101,7 +101,7 @@ class Drupal_Apachesolr_Facetapi_QueryType_DateRangeQueryType extends FacetapiQu
    */
   public function build() {
     $settings = $this->adapter->getFacetSettings($this->facet, facetapi_realm_load('block'));
-    $ranges = (isset($settings->settings['ranges']) ? $settings->settings['ranges'] : date_facets_default_ranges());
+    $ranges = (isset($settings->settings['ranges']) && !empty($settings->settings['ranges']) ? $settings->settings['ranges'] : date_facets_default_ranges());
     $build = date_facets_get_ranges($ranges);
     if ($response = apachesolr_static_response_cache($this->adapter->getSearcher())) {
       $facet_global_settings = $this->adapter->getFacet($this->facet)->getSettings();

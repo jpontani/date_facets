@@ -66,122 +66,123 @@ class Drupal_Apachesolr_Facetapi_Widget_DateRangeWidget extends FacetapiWidgetLi
       '#type' => 'container',
       '#tree' => TRUE,
     );
-    if (isset($this->settings->settings['ranges'])) {
-      uasort($this->settings->settings['ranges'], 'drupal_sort_weight');
-      foreach($this->settings->settings['ranges'] as $range_data) {
-        $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['label'] = array(
-          '#type' => 'textfield',
-          '#title' => t('Label'),
-          '#default_value' => (isset($range_data['label']) ? $range_data['label'] : NULL),
-          '#size' => 40,
-          '#tree' => TRUE,
-        );
-        $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['machine_name'] = array(
-          '#type' => 'machine_name',
-          '#default_value' => (isset($range_data['machine_name']) ? $range_data['machine_name'] : NULL),
-          '#maxlength' => 20,
-          '#machine_name' => array(
-            'exists' => 'date_facets_date_range_exists',
-            'source' => array('widget', 'widget_settings', 'ranges', $range_data['machine_name'], 'label'),
+    if (!isset($this->settings->settings['ranges'])) {
+      $this->settings->settings['ranges'] = date_facets_default_ranges();
+    }
+    uasort($this->settings->settings['ranges'], 'drupal_sort_weight');
+    foreach($this->settings->settings['ranges'] as $range_data) {
+      $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['label'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Label'),
+        '#default_value' => (isset($range_data['label']) ? $range_data['label'] : NULL),
+        '#size' => 40,
+        '#tree' => TRUE,
+      );
+      $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['machine_name'] = array(
+        '#type' => 'machine_name',
+        '#default_value' => (isset($range_data['machine_name']) ? $range_data['machine_name'] : NULL),
+        '#maxlength' => 20,
+        '#machine_name' => array(
+          'exists' => 'date_facets_date_range_exists',
+          'source' => array('widget', 'widget_settings', 'ranges', $range_data['machine_name'], 'label'),
+        ),
+        '#tree' => TRUE,
+      );
+      $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['date_range_start_op'] = array(
+        '#prefix' => t('FROM'),
+        '#type' => 'select',
+        '#title' => t('Date Range'),
+        '#default_value' => (isset($range_data['date_range_start_op']) ? $range_data['date_range_start_op'] : NULL),
+        '#options' => array(
+          'NOW' => t('today'),
+          '-' => t('past'),
+          '+' => t('future'),
+        ),
+        '#tree' => TRUE,
+      );
+      $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['date_range_start_amount'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Date Range'),
+        '#default_value' => (isset($range_data['date_range_start_amount']) ? $range_data['date_range_start_amount'] : NULL),
+        '#size' => 5,
+        '#tree' => TRUE,
+        '#states' => array(
+          'invisible' => array(
+            ':input[name*="' . $range_data['machine_name'] . '][date_range_start_op]"]' => array('value' => 'NOW'),
           ),
-          '#tree' => TRUE,
-        );
-        $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['date_range_start_op'] = array(
-          '#prefix' => t('FROM'),
-          '#type' => 'select',
-          '#title' => t('Date Range'),
-          '#default_value' => (isset($range_data['date_range_start_op']) ? $range_data['date_range_start_op'] : NULL),
-          '#options' => array(
-            'NOW' => t('today'),
-            '-' => t('past'),
-            '+' => t('future'),
+        ),
+      );
+      $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['date_range_start_unit'] = array(
+        '#type' => 'select',
+        '#title' => t('Date Range'),
+        '#default_value' => (isset($range_data['date_range_start_unit']) ? $range_data['date_range_start_unit'] : NULL),
+        '#options' => array(
+          'HOUR' => t('hour'),
+          'DAY' => t('day'),
+          'MONTH' => t('month'),
+          'YEAR' => t('year'),
+        ),
+        '#states' => array(
+          'invisible' => array(
+            ':input[name*="' . $range_data['machine_name'] . '][date_range_start_op]"]' => array('value' => 'NOW'),
           ),
-          '#tree' => TRUE,
-        );
-        $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['date_range_start_amount'] = array(
-          '#type' => 'textfield',
-          '#title' => t('Date Range'),
-          '#default_value' => (isset($range_data['date_range_start_amount']) ? $range_data['date_range_start_amount'] : NULL),
-          '#size' => 5,
-          '#tree' => TRUE,
-          '#states' => array(
-            'invisible' => array(
-              ':input[name*="' . $range_data['machine_name'] . '][date_range_start_op]"]' => array('value' => 'NOW'),
-            ),
+        ),
+        '#tree' => TRUE,
+      );
+      $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['date_range_end_op'] = array(
+        '#prefix' => t('TO'),
+        '#type' => 'select',
+        '#title' => t('Date Range'),
+        '#default_value' => (isset($range_data['date_range_end_op']) ? $range_data['date_range_end_op'] : NULL),
+        '#options' => array(
+          'NOW' => t('today'),
+          '-' => t('past'),
+          '+' => t('future'),
+        ),
+        '#tree' => TRUE,
+      );
+      $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['date_range_end_amount'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Date Range'),
+        '#default_value' => (isset($range_data['date_range_end_amount']) ? $range_data['date_range_end_amount'] : NULL),
+        '#size' => 5,
+        '#tree' => TRUE,
+        '#states' => array(
+          'invisible' => array(
+            ':input[name*="' . $range_data['machine_name'] . '][date_range_end_op]"]' => array('value' => 'NOW'),
           ),
-        );
-        $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['date_range_start_unit'] = array(
-          '#type' => 'select',
-          '#title' => t('Date Range'),
-          '#default_value' => (isset($range_data['date_range_start_unit']) ? $range_data['date_range_start_unit'] : NULL),
-          '#options' => array(
-            'HOUR' => t('hour'),
-            'DAY' => t('day'),
-            'MONTH' => t('month'),
-            'YEAR' => t('year'),
+        ),
+      );
+      $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['date_range_end_unit'] = array(
+        '#type' => 'select',
+        '#title' => t('Date Range'),
+        '#default_value' => (isset($range_data['date_range_end_unit']) ? $range_data['date_range_end_unit'] : NULL),
+        '#options' => array(
+          'HOUR' => t('hour'),
+          'DAY' => t('day'),
+          'MONTH' => t('month'),
+          'YEAR' => t('year'),
+        ),
+        '#states' => array(
+          'invisible' => array(
+            ':input[name*="' . $range_data['machine_name'] . '][date_range_end_op]"]' => array('value' => 'NOW'),
           ),
-          '#states' => array(
-            'invisible' => array(
-              ':input[name*="' . $range_data['machine_name'] . '][date_range_start_op]"]' => array('value' => 'NOW'),
-            ),
-          ),
-          '#tree' => TRUE,
-        );
-        $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['date_range_end_op'] = array(
-          '#prefix' => t('TO'),
-          '#type' => 'select',
-          '#title' => t('Date Range'),
-          '#default_value' => (isset($range_data['date_range_end_op']) ? $range_data['date_range_end_op'] : NULL),
-          '#options' => array(
-            'NOW' => t('today'),
-            '-' => t('past'),
-            '+' => t('future'),
-          ),
-          '#tree' => TRUE,
-        );
-        $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['date_range_end_amount'] = array(
-          '#type' => 'textfield',
-          '#title' => t('Date Range'),
-          '#default_value' => (isset($range_data['date_range_end_amount']) ? $range_data['date_range_end_amount'] : NULL),
-          '#size' => 5,
-          '#tree' => TRUE,
-          '#states' => array(
-            'invisible' => array(
-              ':input[name*="' . $range_data['machine_name'] . '][date_range_end_op]"]' => array('value' => 'NOW'),
-            ),
-          ),
-        );
-        $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['date_range_end_unit'] = array(
-          '#type' => 'select',
-          '#title' => t('Date Range'),
-          '#default_value' => (isset($range_data['date_range_end_unit']) ? $range_data['date_range_end_unit'] : NULL),
-          '#options' => array(
-            'HOUR' => t('hour'),
-            'DAY' => t('day'),
-            'MONTH' => t('month'),
-            'YEAR' => t('year'),
-          ),
-          '#states' => array(
-            'invisible' => array(
-              ':input[name*="' . $range_data['machine_name'] . '][date_range_end_op]"]' => array('value' => 'NOW'),
-            ),
-          ),
-          '#tree' => TRUE,
-        );
-        $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['weight'] = array(
-          '#type' => 'weight',
-          '#title' => t('Weight'),
-          '#default_value' => (isset($range_data['weight']) ? $range_data['weight'] : NULL),
-          '#delta' => 10,
-          '#attributes' => array('class' => array('date-range-weight')),
-          '#tree' => TRUE,
-        );
-        $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['delete'] = array(
-          '#type' => 'checkbox',
-          '#title' => t('Delete'),
-          '#tree' => TRUE,
-        );
-      }
+        ),
+        '#tree' => TRUE,
+      );
+      $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['weight'] = array(
+        '#type' => 'weight',
+        '#title' => t('Weight'),
+        '#default_value' => (isset($range_data['weight']) ? $range_data['weight'] : NULL),
+        '#delta' => 10,
+        '#attributes' => array('class' => array('date-range-weight')),
+        '#tree' => TRUE,
+      );
+      $form['widget']['widget_settings']['ranges'][$range_data['machine_name']]['delete'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Delete'),
+        '#tree' => TRUE,
+      );
     }
     $form['widget']['widget_settings']['date_ranges'] = array(
       '#type' => 'fieldset',
