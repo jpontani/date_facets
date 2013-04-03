@@ -35,7 +35,7 @@ class Drupal_Apachesolr_Facetapi_QueryType_DateRangeQueryType extends FacetapiQu
 
     if (!empty($active)) {
       $range = $ranges[key($active)];
-      list($start, $end) = $this->generateRange($start_info, $end_info);
+      list($start, $end) = $this->generateRange($range);
       $query->addParam('fq', $this->facet['field'] . ":[$start TO $end]");
     }
   }
